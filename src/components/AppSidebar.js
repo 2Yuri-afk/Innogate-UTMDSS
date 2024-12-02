@@ -28,7 +28,8 @@ import { useNavigate } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import _nav from '../_nav'
 
-const defaultProfilePic = 'src/assets/images/avatars/pic.png'
+const defaultProfilePic = '/images/pic.png'; // Correct
+
 
 const AppSidebar = () => {
   const dispatch = useDispatch()

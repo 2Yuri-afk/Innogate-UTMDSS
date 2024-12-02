@@ -36,7 +36,11 @@ import {
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'
 import { db, auth } from 'src/backend/firebase'
 import CustomToast from 'src/components/Toast/CustomToast'
-import defaultProfilePic from 'src/assets/images/avatars/pic.png'
+
+
+const defaultProfilePic = '/images/pic.png'; // Correct
+
+
 
 const CreateAccount = () => {
   const [users, setUsers] = useState([])

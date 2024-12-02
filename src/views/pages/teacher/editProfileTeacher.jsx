@@ -18,7 +18,8 @@ import { db, auth, storage } from 'src/backend/firebase'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import CustomToast from 'src/components/Toast/CustomToast'
 
-const defaultProfilePic = 'src/assets/images/avatars/pic.png'
+const defaultProfilePic = '/images/pic.png'; // Correct
+
 
 const EditProfile = () => {
   const [photoURL, setPhotoURL] = useState(defaultProfilePic)

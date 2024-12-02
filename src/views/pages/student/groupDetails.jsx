@@ -19,7 +19,8 @@ import { collection, getDocs, query, where, addDoc, serverTimestamp } from 'fire
 import { db, auth } from 'src/backend/firebase'
 import CustomToast from 'src/components/Toast/CustomToast'
 
-const defaultProfilePic = 'src/assets/images/avatars/pic.png'
+const defaultProfilePic = '/images/pic.png'; // Correct
+
 
 const GroupDetails = () => {
   const [group, setGroup] = useState({
