@@ -165,111 +165,128 @@ const GroupRequest = () => {
   }
 
   return (
-    <CContainer fluid className="d-flex" style={{ fontSize: '0.875rem' }}>
-      <CCard style={{ width: '250px', marginRight: '15px' }}>
-        <CCardHeader className="py-2">
-          <h6 className="m-0">Pending Group Requests</h6>
-        </CCardHeader>
-        <CCardBody className="p-0">
-          <CListGroup>
-            {groupRequests.length > 0 ? (
-              groupRequests.map((request) => (
-                <CListGroupItem
-                  key={request.id}
-                  onClick={() => handleGroupSelect(request)}
-                  active={selectedGroup?.id === request.id}
-                  color={selectedGroup?.id === request.id ? 'primary' : undefined}
-                  className="py-2"
-                >
-                  <small>{request.groupID}</small>
-                </CListGroupItem>
-              ))
-            ) : (
-              <CListGroupItem className="py-2">
-                <small>No pending requests</small>
-              </CListGroupItem>
-            )}
-          </CListGroup>
-        </CCardBody>
-      </CCard>
-
-      <CCard style={{ flex: 1 }}>
-        <CCardHeader className="py-2">
-          <h6 className="m-0">
-            {selectedGroup ? `Group Request: ${selectedGroup.groupID}` : 'Select a Group Request'}
-          </h6>
-        </CCardHeader>
-        <CCardBody>
-          {selectedGroup ? (
-            <div>
-              <CCard className="mb-3">
-                <CCardHeader className="py-2">
-                  <small className="m-0 fw-bold">Group Members</small>
-                </CCardHeader>
-                <CCardBody className="p-2">
-                  <CListGroup>
-                    {selectedGroup.members?.map((member) => (
-                      <CListGroupItem key={member.uid} className="py-1">
-                        <small>
-                          {member.name} - <em>{member.email}</em>
-                        </small>
-                      </CListGroupItem>
-                    ))}
-                  </CListGroup>
-                </CCardBody>
-              </CCard>
-
-              <CCard className="mb-3">
-                <CCardHeader className="py-2">
-                  <small className="m-0 fw-bold">Approved Topic</small>
-                </CCardHeader>
-                <CCardBody className="p-2">
-                  <h6 className="mb-2">{selectedGroup.approvedProposal?.title}</h6>
-                  <p className="mb-2" style={{ fontSize: '0.8rem' }}>
-                    {selectedGroup.approvedProposal?.description}
-                  </p>
-                  <CRow>
-                    <CCol>
-                      <small>
-                        <strong>Client:</strong> {selectedGroup.approvedProposal?.client}
-                      </small>
-                    </CCol>
-                    <CCol>
-                      <small>
-                        <strong>Field:</strong> {selectedGroup.approvedProposal?.field}
-                      </small>
-                    </CCol>
-                  </CRow>
-                  <CButton
-                    style={{ backgroundColor: '#3634a3', color: 'white' }}
-                    size="sm"
-                    className="mt-3"
-                    onClick={downloadAbstract}
+    <CContainer fluid className="p-0">
+      <div className="d-flex flex-column flex-md-row gap-3">
+        {/* Sidebar - now full width on mobile, fixed width on desktop */}
+        <CCard className="w-100 w-md-250px mb-3 mb-md-0">
+          <CCardHeader className="py-2">
+            <h6 className="m-0">Pending Group Requests</h6>
+          </CCardHeader>
+          <CCardBody className="p-0">
+            <CListGroup>
+              {groupRequests.length > 0 ? (
+                groupRequests.map((request) => (
+                  <CListGroupItem
+                    key={request.id}
+                    onClick={() => handleGroupSelect(request)}
+                    active={selectedGroup?.id === request.id}
+                    color={selectedGroup?.id === request.id ? 'primary' : undefined}
+                    className="py-2 px-3"
                   >
-                    <CIcon icon={cilCloudDownload} className="me-1" />
-                    Download Abstract
-                  </CButton>
-                </CCardBody>
-              </CCard>
+                    <small>{request.groupID}</small>
+                  </CListGroupItem>
+                ))
+              ) : (
+                <CListGroupItem className="py-2 px-3">
+                  <small>No pending requests</small>
+                </CListGroupItem>
+              )}
+            </CListGroup>
+          </CCardBody>
+        </CCard>
 
-              <CButtonGroup className="w-100">
-                <CButton color="success" size="sm" onClick={() => openConfirmModal('accept')}>
-                  <CIcon icon={cilCheckCircle} className="me-1" />
-                  Accept
-                </CButton>
-                <CButton color="danger" size="sm" onClick={() => openConfirmModal('reject')}>
-                  <CIcon icon={cilXCircle} className="me-1" />
-                  Reject
-                </CButton>
-              </CButtonGroup>
-            </div>
-          ) : (
-            <div className="text-center text-muted">
-              <p>Select a group request to view details</p>
-            </div>
-          )}
-        </CCardBody>
-      </CCard>
+        {/* Main content - takes full width on mobile */}
+        <CCard className="flex-grow-1">
+          <CCardHeader className="py-2">
+            <h6 className="m-0">
+              {selectedGroup ? `Group Request: ${selectedGroup.groupID}` : 'Select a Group Request'}
+            </h6>
+          </CCardHeader>
+          <CCardBody className="p-3">
+            {selectedGroup ? (
+              <div>
+                <CCard className="mb-3">
+                  <CCardHeader className="py-2">
+                    <small className="m-0 fw-bold">Group Members</small>
+                  </CCardHeader>
+                  <CCardBody className="p-2">
+                    <CListGroup>
+                      {selectedGroup.members?.map((member) => (
+                        <CListGroupItem key={member.uid} className="py-2 px-3">
+                          <div className="d-flex flex-column flex-md-row justify-content-between">
+                            <small className="mb-1 mb-md-0">{member.name}</small>
+                            <small className="text-muted">
+                              <em>{member.email}</em>
+                            </small>
+                          </div>
+                        </CListGroupItem>
+                      ))}
+                    </CListGroup>
+                  </CCardBody>
+                </CCard>
+
+                <CCard className="mb-3">
+                  <CCardHeader className="py-2">
+                    <small className="m-0 fw-bold">Approved Topic</small>
+                  </CCardHeader>
+                  <CCardBody className="p-3">
+                    <h6 className="mb-3">{selectedGroup.approvedProposal?.title}</h6>
+                    <p className="mb-3" style={{ fontSize: '0.8rem' }}>
+                      {selectedGroup.approvedProposal?.description}
+                    </p>
+                    <CRow className="mb-3">
+                      <CCol xs={12} md={6} className="mb-2 mb-md-0">
+                        <small>
+                          <strong>Client:</strong> {selectedGroup.approvedProposal?.client}
+                        </small>
+                      </CCol>
+                      <CCol xs={12} md={6}>
+                        <small>
+                          <strong>Field:</strong> {selectedGroup.approvedProposal?.field}
+                        </small>
+                      </CCol>
+                    </CRow>
+                    <CButton
+                      style={{ backgroundColor: '#3634a3', color: 'white' }}
+                      size="sm"
+                      className="w-100 w-md-auto"
+                      onClick={downloadAbstract}
+                    >
+                      <CIcon icon={cilCloudDownload} className="me-1" />
+                      Download Abstract
+                    </CButton>
+                  </CCardBody>
+                </CCard>
+
+                <CButtonGroup className="w-100 mt-3">
+                  <CButton
+                    color="success"
+                    size="sm"
+                    className="py-2"
+                    onClick={() => openConfirmModal('accept')}
+                  >
+                    <CIcon icon={cilCheckCircle} className="me-1" />
+                    Accept
+                  </CButton>
+                  <CButton
+                    color="danger"
+                    size="sm"
+                    className="py-2"
+                    onClick={() => openConfirmModal('reject')}
+                  >
+                    <CIcon icon={cilXCircle} className="me-1" />
+                    Reject
+                  </CButton>
+                </CButtonGroup>
+              </div>
+            ) : (
+              <div className="text-center text-muted p-4">
+                <p>Select a group request to view details</p>
+              </div>
+            )}
+          </CCardBody>
+        </CCard>
+      </div>
 
       <CModal visible={confirmModal} onClose={() => setConfirmModal(false)} size="sm">
         <CModalHeader>

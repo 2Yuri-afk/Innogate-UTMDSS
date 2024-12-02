@@ -1,4 +1,4 @@
-# **Thesis Management System**
+# **Unified Thesis Management and Defense Scheduling System**
 
 An all-in-one platform for managing thesis projects, designed to streamline collaboration, scheduling, and monitoring between students, teachers, advisers, and admins. Built with React and Firebase, the system ensures seamless role-based access, robust authentication, and real-time updates.
 
