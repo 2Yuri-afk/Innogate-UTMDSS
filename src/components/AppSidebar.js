@@ -28,7 +28,8 @@ import { useNavigate } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import _nav from '../_nav'
 
-const defaultProfilePic = '/images/pic.png'; // Correct
+const defaultProfilePic = 'https://firebasestorage.googleapis.com/v0/b/thesismanagementsystem-39688.appspot.com/o/pic.png?alt=media';
+
 
 
 const AppSidebar = () => {
