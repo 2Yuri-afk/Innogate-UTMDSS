@@ -37,8 +37,8 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'fire
 import { db, auth } from 'src/backend/firebase'
 import CustomToast from 'src/components/Toast/CustomToast'
 
-const defaultProfilePic = 'https://firebasestorage.googleapis.com/v0/b/thesismanagementsystem-39688.appspot.com/o/pic.png?alt=media&token=13aa8904-de84-401b-b813-4a753736304f';
-
+const defaultProfilePic =
+  'https://firebasestorage.googleapis.com/v0/b/thesismanagementsystem-39688.appspot.com/o/pic.png?alt=media&token=13aa8904-de84-401b-b813-4a753736304f'
 
 const CreateAccount = () => {
   const [users, setUsers] = useState([])
@@ -204,77 +204,87 @@ const CreateAccount = () => {
   }
 
   return (
-    <CCard className="mb-3">
+    <CCard className="mb-3 border-0 shadow-sm">
       <CCardHeader>
-        <div className="d-flex justify-content-between align-items-center">
-          <h5>Users</h5>
-          <CButton onClick={() => setModalVisible(true)} color="primary">
+        <div className="d-flex justify-content-between align-items-center py-2">
+          <h5 className="mb-0">Users</h5>
+          <CButton onClick={() => setModalVisible(true)} color="primary" className="px-4">
             Add User
           </CButton>
         </div>
       </CCardHeader>
-      <CCardBody>
-        <CTable hover responsive small striped>
-          <CTableHead>
-            <CTableRow>
-              <CTableHeaderCell scope="col" style={{ width: '30%' }}>
-                Name
-              </CTableHeaderCell>
-              <CTableHeaderCell scope="col" style={{ width: '30%' }}>
-                Email
-              </CTableHeaderCell>
-              <CTableHeaderCell scope="col" style={{ width: '25%' }}>
-                Role
-              </CTableHeaderCell>
-              <CTableHeaderCell scope="col" style={{ width: '15%' }}>
-                Actions
-              </CTableHeaderCell>
-            </CTableRow>
-          </CTableHead>
-          <CTableBody>
-            {users.length === 0 ? (
+      <CCardBody className="px-0 px-md-3">
+        <div className="table-responsive">
+          <CTable hover responsive small striped className="mb-0">
+            <CTableHead>
               <CTableRow>
-                <CTableDataCell colSpan={4} className="text-center">
-                  No users added yet.
-                </CTableDataCell>
+                <CTableHeaderCell scope="col" className="ps-3 ps-md-4">
+                  Name
+                </CTableHeaderCell>
+                <CTableHeaderCell scope="col" className="d-none d-md-table-cell">
+                  Email
+                </CTableHeaderCell>
+                <CTableHeaderCell scope="col" className="d-none d-sm-table-cell">
+                  Role
+                </CTableHeaderCell>
+                <CTableHeaderCell scope="col" className="text-end pe-3 pe-md-4">
+                  Actions
+                </CTableHeaderCell>
               </CTableRow>
-            ) : (
-              users.map((user, index) => (
-                <CTableRow key={index}>
-                  <CTableDataCell style={{ width: '30%' }}>
-                    <CImage
-                      src={user.photoURL || defaultProfilePic}
-                      width={30}
-                      height={30}
-                      alt="Profile Picture"
-                      className="me-3"
-                      style={{
-                        border: '1px solid gray',
-                        borderRadius: '15px',
-                      }}
-                    />
-                    <span className="small">{user.name}</span>
-                  </CTableDataCell>
-                  <CTableDataCell style={{ width: '35%' }}>
-                    <span className="small">{user.email}</span>
-                  </CTableDataCell>
-                  <CTableDataCell style={{ width: '15%' }}>
-                    <span className="small">{user.role}</span>
-                  </CTableDataCell>
-                  <CTableDataCell style={{ width: '20%' }}>
-                    <CButton
-                      size="sm"
-                      color="danger"
-                      onClick={() => handleDeleteUserConfirmation(user)}
-                    >
-                      Delete
-                    </CButton>
+            </CTableHead>
+            <CTableBody>
+              {users.length === 0 ? (
+                <CTableRow>
+                  <CTableDataCell colSpan={4} className="text-center">
+                    No users added yet.
                   </CTableDataCell>
                 </CTableRow>
-              ))
-            )}
-          </CTableBody>
-        </CTable>
+              ) : (
+                users.map((user, index) => (
+                  <CTableRow key={index}>
+                    <CTableDataCell className="ps-3 ps-md-4">
+                      <div className="d-flex align-items-center">
+                        <CImage
+                          src={user.photoURL || defaultProfilePic}
+                          width={30}
+                          height={30}
+                          alt="Profile Picture"
+                          className="me-2 me-md-3"
+                          style={{
+                            border: '1px solid #dee2e6',
+                            borderRadius: '50%',
+                          }}
+                        />
+                        <div>
+                          <div className="small fw-medium">{user.name}</div>
+                          <div className="small text-muted d-md-none">{user.email}</div>
+                          <div className="small text-muted d-sm-none">{user.role}</div>
+                        </div>
+                      </div>
+                    </CTableDataCell>
+                    <CTableDataCell className="d-none d-md-table-cell">
+                      <span className="small">{user.email}</span>
+                    </CTableDataCell>
+                    <CTableDataCell className="d-none d-sm-table-cell">
+                      <span className="small">{user.role}</span>
+                    </CTableDataCell>
+                    <CTableDataCell className="text-end pe-3 pe-md-4">
+                      <CButton
+                        size="sm"
+                        color="danger"
+                        variant="outline"
+                        onClick={() => handleDeleteUserConfirmation(user)}
+                        className="px-3"
+                      >
+                        Delete
+                      </CButton>
+                    </CTableDataCell>
+                  </CTableRow>
+                ))
+              )}
+            </CTableBody>
+          </CTable>
+        </div>
       </CCardBody>
 
       {/* Add User Modal */}

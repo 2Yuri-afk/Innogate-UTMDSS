@@ -19,19 +19,16 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { AppSidebarNav } from './AppSidebarNav'
-import { logo } from 'src/assets/brand/logo'
-import { sygnet } from 'src/assets/brand/sygnet'
 import { cilAccountLogout, cilChevronRight, cilChevronBottom } from '@coreui/icons'
 import { auth, db } from 'src/backend/firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { useNavigate } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import _nav from '../_nav'
+import logoIT from 'src/assets/brand/logoIT.png'
 
-const defaultProfilePic = 'https://firebasestorage.googleapis.com/v0/b/thesismanagementsystem-39688.appspot.com/o/pic.png?alt=media&token=13aa8904-de84-401b-b813-4a753736304f';
-
-
-
+const defaultProfilePic =
+  'https://firebasestorage.googleapis.com/v0/b/thesismanagementsystem-39688.appspot.com/o/pic.png?alt=media&token=13aa8904-de84-401b-b813-4a753736304f'
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
@@ -105,21 +102,17 @@ const AppSidebar = () => {
       onMouseLeave={handleMouseLeave}
     >
       <CSidebarHeader className="border-bottom">
-      <CSidebarBrand
-        to="/"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          height: '2rem', // Adjust height based on your design
-          width: '100%', // Ensures it takes the full width of the sidebar
-        }}
-      >
-        <img
-          src="src/assets/brand/logoIT.png"
-          alt="Logo"
-          style={{ width: '170px', maxWidth: '100%' }}
-        />
-      </CSidebarBrand>
+        <CSidebarBrand
+          to="/"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            height: '2rem', // Adjust height based on your design
+            width: '100%', // Ensures it takes the full width of the sidebar
+          }}
+        >
+          <img src={logoIT} alt="Logo" style={{ width: '170px', maxWidth: '100%' }} />
+        </CSidebarBrand>
       </CSidebarHeader>
 
       {/* Sidebar Navigation */}

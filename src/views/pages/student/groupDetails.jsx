@@ -19,10 +19,8 @@ import { collection, getDocs, query, where, addDoc, serverTimestamp } from 'fire
 import { db, auth } from 'src/backend/firebase'
 import CustomToast from 'src/components/Toast/CustomToast'
 
-const defaultProfilePic = 'https://firebasestorage.googleapis.com/v0/b/thesismanagementsystem-39688.appspot.com/o/pic.png?alt=media&token=13aa8904-de84-401b-b813-4a753736304f';
-
-
-
+const defaultProfilePic =
+  'https://firebasestorage.googleapis.com/v0/b/thesismanagementsystem-39688.appspot.com/o/pic.png?alt=media&token=13aa8904-de84-401b-b813-4a753736304f'
 
 const GroupDetails = () => {
   const [group, setGroup] = useState({
@@ -190,7 +188,9 @@ const GroupDetails = () => {
 
   return (
     <CContainer>
-      <CRow className="my-4">
+      <CRow className="my-4 g-3">
+        {' '}
+        {/* Added g-3 for spacing */}
         <CCol md={4}>
           <CCard>
             <CCardHeader>
@@ -222,9 +222,10 @@ const GroupDetails = () => {
             </CCardBody>
           </CCard>
         </CCol>
-
         <CCol md={8}>
           <CCard className="mb-3">
+            {' '}
+            {/* mb-3 adds margin to the bottom */}
             <CCardHeader>
               <strong>Thesis Information</strong>
             </CCardHeader>
@@ -292,69 +293,69 @@ const GroupDetails = () => {
         </CCol>
       </CRow>
       <CModal
-  visible={modalVisible}
-  onClose={() => {
-    setModalVisible(false); // Close the modal
-    setSelectedAdviser(null); // Clear the selected adviser
-  }}
-  onShow={() => {
-    setSelectedAdviser(null); // Reset the selected adviser when modal opens
-  }}
->
-  <CModalHeader>
-    <CModalTitle>Select an Adviser</CModalTitle>
-  </CModalHeader>
-  <CModalBody>
-    {adviserList.length > 0 ? (
-      <ul className="list-unstyled">
-        {adviserList.map((adviser) => (
-          <li
-            key={adviser.id}
+        visible={modalVisible}
+        onClose={() => {
+          setModalVisible(false) // Close the modal
+          setSelectedAdviser(null) // Clear the selected adviser
+        }}
+        onShow={() => {
+          setSelectedAdviser(null) // Reset the selected adviser when modal opens
+        }}
+      >
+        <CModalHeader>
+          <CModalTitle>Select an Adviser</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {adviserList.length > 0 ? (
+            <ul className="list-unstyled">
+              {adviserList.map((adviser) => (
+                <li
+                  key={adviser.id}
+                  onClick={() => {
+                    if (!rejectedAdviserUIDs.includes(adviser.uid)) {
+                      setSelectedAdviser(adviser)
+                      setAdviserRejectionMessage(null) // Clear rejection message
+                    }
+                  }}
+                  className={`d-flex justify-content-between align-items-center p-3 mb-2 rounded ${
+                    selectedAdviser && selectedAdviser.uid === adviser.uid
+                      ? 'bg-success text-white'
+                      : 'bg-body-secondary' // Automatically adapts to dark mode
+                  } ${
+                    rejectedAdviserUIDs.includes(adviser.uid)
+                      ? 'text-muted disabled'
+                      : 'cursor-pointer'
+                  }`}
+                >
+                  <span>{adviser.name}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-center">No advisers available at the moment.</p>
+          )}
+        </CModalBody>
+        <CModalFooter>
+          <CButton
+            color="secondary"
             onClick={() => {
-              if (!rejectedAdviserUIDs.includes(adviser.uid)) {
-                setSelectedAdviser(adviser);
-                setAdviserRejectionMessage(null); // Clear rejection message
-              }
+              setModalVisible(false) // Close the modal
+              setSelectedAdviser(null) // Clear the selected adviser
             }}
-            className={`d-flex justify-content-between align-items-center p-3 mb-2 rounded ${
-              selectedAdviser && selectedAdviser.uid === adviser.uid
-                ? 'bg-success text-white'
-                : 'bg-body-secondary' // Automatically adapts to dark mode
-            } ${
-              rejectedAdviserUIDs.includes(adviser.uid) ? 'text-muted disabled' : 'cursor-pointer'
-            }`}
           >
-            <span>{adviser.name}</span>
-          </li>
-        ))}
-      </ul>
-    ) : (
-      <p className="text-center">No advisers available at the moment.</p>
-    )}
-  </CModalBody>
-  <CModalFooter>
-    <CButton
-      color="secondary"
-      onClick={() => {
-        setModalVisible(false); // Close the modal
-        setSelectedAdviser(null); // Clear the selected adviser
-      }}
-    >
-      Cancel
-    </CButton>
-    <CButton
-      color="primary"
-      onClick={() => {
-        handleSubmitRequest(); // Trigger the submission logic
-      }}
-      disabled={!selectedAdviser} // Prevent submission if no adviser is selected
-    >
-      Submit Request
-    </CButton>
-  </CModalFooter>
-</CModal>
-
-
+            Cancel
+          </CButton>
+          <CButton
+            color="primary"
+            onClick={() => {
+              handleSubmitRequest() // Trigger the submission logic
+            }}
+            disabled={!selectedAdviser} // Prevent submission if no adviser is selected
+          >
+            Submit Request
+          </CButton>
+        </CModalFooter>
+      </CModal>
       <CustomToast toast={toast} setToast={setToast} /> {/* Toast added */}
     </CContainer>
   )

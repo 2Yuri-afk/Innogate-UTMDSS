@@ -241,7 +241,7 @@ const GroupRequest = () => {
                     </CCol>
                   </CRow>
                   <CButton
-                    style={{ backgroundColor: '#3634a3', color: 'white' }} 
+                    style={{ backgroundColor: '#3634a3', color: 'white' }}
                     size="sm"
                     className="mt-3"
                     onClick={downloadAbstract}

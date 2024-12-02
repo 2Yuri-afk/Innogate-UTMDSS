@@ -20,12 +20,7 @@ import {
   CBadge,
   CAvatar,
 } from '@coreui/react'
-import { 
-  cilCheckCircle, 
-  cilXCircle, 
-  cilSync, 
-  cilCloudDownload 
-} from '@coreui/icons'
+import { cilCheckCircle, cilXCircle, cilSync, cilCloudDownload } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { db, auth, storage } from 'src/backend/firebase'
 import { collection, getDocs, doc, updateDoc, query, where } from 'firebase/firestore'
@@ -125,20 +120,20 @@ const ProposalManagement = () => {
   // New function to handle abstract form download
   const handleDownloadAbstract = async (proposalId, abstractFormUrl) => {
     // Start loading for this specific proposal
-    setDownloadLoading(prev => ({...prev, [proposalId]: true}))
+    setDownloadLoading((prev) => ({ ...prev, [proposalId]: true }))
 
     try {
       // Fetch the download URL
       const downloadURL = await getDownloadURL(ref(storage, abstractFormUrl))
-      
+
       // Create a temporary anchor element to trigger download
       const link = document.createElement('a')
       link.href = downloadURL
-      
+
       // Extract filename from URL or use a default
       const filename = abstractFormUrl.split('/').pop().split('?')[0] || 'abstract.pdf'
       link.download = filename
-      
+
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -155,7 +150,7 @@ const ProposalManagement = () => {
       })
     } finally {
       // Stop loading for this proposal
-      setDownloadLoading(prev => ({...prev, [proposalId]: false}))
+      setDownloadLoading((prev) => ({ ...prev, [proposalId]: false }))
     }
   }
 
@@ -318,182 +313,186 @@ const ProposalManagement = () => {
   }
 
   return (
-    <CContainer fluid className="d-flex" style={{ fontSize: '0.875rem' }}>
-      {/* Left sidebar containing Groups and Members */}
-      <div style={{ width: '250px', marginRight: '15px' }}>
-        {/* Groups Card */}
-        <CCard className="mb-3">
-          <CCardHeader className="py-2">
-            <h6 className="m-0">My Groups</h6>
-          </CCardHeader>
-          <CCardBody className="p-0">
-            <CListGroup>
-              {teacherGroups.length > 0 ? (
-                teacherGroups.map((groupID) => (
-                  <CListGroupItem
-                    key={groupID}
-                    onClick={() => handleGroupSelect(groupID)}
-                    active={selectedGroup === groupID}
-                    color={selectedGroup === groupID ? 'primary' : undefined}
-                    className="py-2"
-                  >
-                    <small>{groupID}</small>
-                  </CListGroupItem>
-                ))
-              ) : (
-                <CListGroupItem className="py-2">
-                  <small>No groups found</small>
-                </CListGroupItem>
-              )}
-            </CListGroup>
-          </CCardBody>
-        </CCard>
-
-        {/* Members Card */}
-        <CCard>
-          <CCardHeader className="py-2">
-            <h6 className="m-0">Members</h6>
-          </CCardHeader>
-          <CCardBody className="p-0">
-            <CListGroup>
-              {selectedGroup ? (
-                groupMembers.length > 0 ? (
-                  groupMembers.map((member) => (
-                    <CListGroupItem key={member.id} className="py-2">
-                      <div className="d-flex align-items-center">
-                        <CAvatar
-                          src={member.photoURL || '/avatars/default.jpg'}
-                          size="sm"
-                          className="me-2"
-                        />
-                        <small>{member.name || member.email}</small>
-                      </div>
+    <CContainer fluid className="p-2">
+      <div className="d-flex flex-column flex-md-row gap-3">
+        {/* Left sidebar containing Groups and Members */}
+        <div className="flex-shrink-0" style={{ width: '100%', maxWidth: '250px' }}>
+          {/* Groups Card */}
+          <CCard className="mb-3">
+            <CCardHeader className="py-2">
+              <h6 className="m-0">My Groups</h6>
+            </CCardHeader>
+            <CCardBody className="p-0">
+              <CListGroup>
+                {teacherGroups.length > 0 ? (
+                  teacherGroups.map((groupID) => (
+                    <CListGroupItem
+                      key={groupID}
+                      onClick={() => handleGroupSelect(groupID)}
+                      active={selectedGroup === groupID}
+                      color={selectedGroup === groupID ? 'primary' : undefined}
+                      className="py-2"
+                    >
+                      <small>{groupID}</small>
                     </CListGroupItem>
                   ))
                 ) : (
                   <CListGroupItem className="py-2">
-                    <small>No members in this group</small>
+                    <small>No groups found</small>
                   </CListGroupItem>
-                )
-              ) : (
-                <CListGroupItem className="py-2">
-                  <small>Select a group to see members</small>
-                </CListGroupItem>
-              )}
-            </CListGroup>
+                )}
+              </CListGroup>
+            </CCardBody>
+          </CCard>
+
+          {/* Members Card */}
+          <CCard>
+            <CCardHeader className="py-2">
+              <h6 className="m-0">Members</h6>
+            </CCardHeader>
+            <CCardBody className="p-0">
+              <CListGroup>
+                {selectedGroup ? (
+                  groupMembers.length > 0 ? (
+                    groupMembers.map((member) => (
+                      <CListGroupItem key={member.id} className="py-2">
+                        <div className="d-flex align-items-center">
+                          <CAvatar
+                            src={member.photoURL || '/avatars/default.jpg'}
+                            size="sm"
+                            className="me-2"
+                          />
+                          <small className="text-truncate">{member.name || member.email}</small>
+                        </div>
+                      </CListGroupItem>
+                    ))
+                  ) : (
+                    <CListGroupItem className="py-2">
+                      <small>No members in this group</small>
+                    </CListGroupItem>
+                  )
+                ) : (
+                  <CListGroupItem className="py-2">
+                    <small>Select a group to see members</small>
+                  </CListGroupItem>
+                )}
+              </CListGroup>
+            </CCardBody>
+          </CCard>
+        </div>
+
+        {/* Main Content - Proposal Details */}
+        <CCard className="flex-grow-1">
+          <CCardHeader className="py-2">
+            <h6 className="m-0">{selectedGroup ? `Group: ${selectedGroup}` : 'Select a Group'}</h6>
+          </CCardHeader>
+          <CCardBody>
+            {selectedGroup && proposalsByGroup[selectedGroup]?.length > 0 ? (
+              proposalsByGroup[selectedGroup].map((proposal) => (
+                <CCard key={proposal.id} className="mb-3">
+                  <CCardHeader className="py-2">
+                    <small className="m-0 fw-bold">{proposal.title}</small>
+                  </CCardHeader>
+                  <CCardBody className="p-2">
+                    <p className="mb-2" style={{ fontSize: '0.8rem' }}>
+                      {proposal.description}
+                    </p>
+                    <CRow className="gy-2">
+                      <CCol xs={12} sm={6}>
+                        <small>
+                          <strong>Client:</strong> {proposal.client}
+                        </small>
+                      </CCol>
+                      <CCol xs={12} sm={6}>
+                        <small>
+                          <strong>Field:</strong> {proposal.field}
+                        </small>
+                      </CCol>
+                    </CRow>
+                    <CRow className="mt-2">
+                      <CCol>
+                        <small>
+                          <strong>Status:</strong>{' '}
+                          <CBadge
+                            color={getStatusBadgeColor(proposal.status)}
+                            className="text-capitalize"
+                          >
+                            {proposal.status.replace('_', ' ')}
+                          </CBadge>
+                        </small>
+                      </CCol>
+                    </CRow>
+                    <CRow className="mt-2">
+                      <CCol>
+                        <div className="d-flex justify-content-end">
+                          <CButton
+                            style={{ backgroundColor: '#3634a3', color: 'white' }}
+                            size="sm"
+                            onClick={() =>
+                              handleDownloadAbstract(proposal.id, proposal.abstractForm)
+                            }
+                            disabled={!proposal.abstractForm || downloadLoading[proposal.id]}
+                          >
+                            {downloadLoading[proposal.id] ? (
+                              <>
+                                <CSpinner size="sm" className="me-1" />
+                                <span className="d-none d-sm-inline">Downloading...</span>
+                              </>
+                            ) : (
+                              <>
+                                <CIcon icon={cilCloudDownload} className="me-1" />
+                                <span className="d-none d-sm-inline">Download Abstract</span>
+                              </>
+                            )}
+                          </CButton>
+                        </div>
+                      </CCol>
+                    </CRow>
+                  </CCardBody>
+                  <CCardBody className="border-top p-2">
+                    <CButtonGroup className="w-100 flex-wrap gap-1">
+                      <CButton
+                        color="success"
+                        size="sm"
+                        onClick={() => handleApprove(proposal.id)}
+                        disabled={isButtonDisabled(proposal)}
+                        className="flex-grow-1"
+                      >
+                        <CIcon icon={cilCheckCircle} className="me-1" />
+                        <span className="d-none d-sm-inline">Approve</span>
+                      </CButton>
+                      <CButton
+                        color="danger"
+                        size="sm"
+                        onClick={() => handleReject(proposal.id)}
+                        disabled={isButtonDisabled(proposal)}
+                        className="flex-grow-1"
+                      >
+                        <CIcon icon={cilXCircle} className="me-1" />
+                        <span className="d-none d-sm-inline">Reject</span>
+                      </CButton>
+                      <CButton
+                        color="warning"
+                        size="sm"
+                        onClick={() => handleRevise(proposal)}
+                        disabled={isButtonDisabled(proposal)}
+                        className="flex-grow-1"
+                      >
+                        <CIcon icon={cilSync} className="me-1" />
+                        <span className="d-none d-sm-inline">Revise</span>
+                      </CButton>
+                    </CButtonGroup>
+                  </CCardBody>
+                </CCard>
+              ))
+            ) : (
+              <div className="text-center text-muted">
+                <p>No proposals available for this group</p>
+              </div>
+            )}
           </CCardBody>
         </CCard>
       </div>
-      {/* Main Content - Proposal Details */}
-      <CCard style={{ flex: 1 }}>
-        <CCardHeader className="py-2">
-          <h6 className="m-0">{selectedGroup ? `Group: ${selectedGroup}` : 'Select a Group'}</h6>
-        </CCardHeader>
-        <CCardBody>
-          {selectedGroup && proposalsByGroup[selectedGroup]?.length > 0 ? (
-            proposalsByGroup[selectedGroup].map((proposal) => (
-              <CCard key={proposal.id} className="mb-3">
-                <CCardHeader className="py-2">
-                  <small className="m-0 fw-bold">{proposal.title}</small>
-                </CCardHeader>
-                <CCardBody className="p-2">
-                  <p className="mb-2" style={{ fontSize: '0.8rem' }}>
-                    {proposal.description}
-                  </p>
-                  <CRow>
-                    <CCol>
-                      <small>
-                        <strong>Client:</strong> {proposal.client}
-                      </small>
-                    </CCol>
-                    <CCol>
-                      <small>
-                        <strong>Field:</strong> {proposal.field}
-                      </small>
-                    </CCol>
-                  </CRow>
-                  <CRow className="mt-2">
-                    <CCol>
-                      <small>
-                        <strong>Status:</strong>{' '}
-                        <CBadge
-                          color={getStatusBadgeColor(proposal.status)}
-                          className="text-capitalize"
-                        >
-                          {proposal.status.replace('_', ' ')}
-                        </CBadge>
-                      </small>
-                    </CCol>
-                  </CRow>
-                  {/* New Abstract Form Download Section */}
-                  <CRow className="mt-2">
-                    <CCol>
-                    <div className="d-flex justify-content-end w-100">
-                    <CButton
-                      style={{ backgroundColor: '#3634a3', color: 'white' }}  // Set custom background and font color
-                      size="sm"
-                      onClick={() => handleDownloadAbstract(proposal.id, proposal.abstractForm)}
-                      disabled={!proposal.abstractForm || downloadLoading[proposal.id]}
-                      className="ms-auto"  // Align to the left (move to the other side)
-                    >
-                      {downloadLoading[proposal.id] ? (
-                        <>
-                          <CSpinner size="sm" className="me-1" />
-                          Downloading...
-                        </>
-                      ) : (
-                        <>
-                          <CIcon icon={cilCloudDownload} className="me-1" />
-                          Download Abstract
-                        </>
-                      )}
-                    </CButton>
-                    </div>
-                    
-
-                    </CCol>
-                  </CRow>
-                </CCardBody>
-                <CCardBody className="border-top p-2">
-                <CButtonGroup className="w-100">
-                    <CButton
-                      color="success"
-                      size="sm"
-                      onClick={() => handleApprove(proposal.id)}
-                      disabled={isButtonDisabled(proposal)}
-                    >
-                      <CIcon icon={cilCheckCircle} className="me-1" />
-                      Approve
-                    </CButton>
-                    <CButton
-                      color="danger"
-                      size="sm"
-                      onClick={() => handleReject(proposal.id)}
-                      disabled={isButtonDisabled(proposal)}
-                    >
-                      <CIcon icon={cilXCircle} className="me-1" />
-                      Reject
-                    </CButton>
-                    <CButton
-                      color="warning"
-                      size="sm"
-                      onClick={() => handleRevise(proposal)}
-                      disabled={isButtonDisabled(proposal)}
-                    >
-                      <CIcon icon={cilSync} className="me-1" />
-                      Revise
-                    </CButton>
-                  </CButtonGroup>
-                </CCardBody>
-              </CCard>
-            ))
-          ) : (
-            <div className="text-center text-muted">
-              <p>No proposals available for this group</p>
-            </div>
-          )}
-        </CCardBody>
-      </CCard>
 
       {/* Revision Modal */}
       <CModal visible={revisionModal} onClose={() => setRevisionModal(false)} size="sm">

@@ -441,7 +441,6 @@ const ThesisProposal = () => {
                           value={form.field}
                           onChange={(e) => handleFieldChange(index, 'field', e.target.value)}
                           disabled={!form.editable || form.status === 'rejected'}
-                          className={form.status === 'rejected' ? 'bg-light' : ''}
                         >
                           <option value="">Select Field</option>
                           <option value="field1">Field 1</option>
