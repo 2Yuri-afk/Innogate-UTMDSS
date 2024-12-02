@@ -19,7 +19,8 @@ import { collection, getDocs, query, where, addDoc, serverTimestamp } from 'fire
 import { db, auth } from 'src/backend/firebase'
 import CustomToast from 'src/components/Toast/CustomToast'
 
-const defaultProfilePic = 'https://firebasestorage.googleapis.com/v0/b/thesismanagementsystem-39688.appspot.com/o/pic.png?alt=media';
+const defaultProfilePic = 'https://firebasestorage.googleapis.com/v0/b/thesismanagementsystem-39688.appspot.com/o/pic.png?alt=media&token=13aa8904-de84-401b-b813-4a753736304f';
+
 
 
 
