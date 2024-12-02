@@ -166,40 +166,40 @@ const MyStudents = () => {
   }
 
   return (
-    <CCard className="h-100">
+    <CCard>
       <CCardHeader>
-        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+        <div className="d-flex justify-content-between align-items-center">
           <h5 className="mb-0">My Students</h5>
-          <div className="d-flex flex-column flex-sm-row gap-2 w-100 w-sm-auto">
+          <div className="d-flex flex-column flex-sm-row gap-2">
             <CButton
               color="primary"
-              className="w-100 w-sm-auto"
+              className="me-sm-2"
               onClick={() => setEnrollModalVisible(true)}
             >
               Add Students
             </CButton>
-            <CButton
-              color="primary"
-              className="w-100 w-sm-auto"
-              onClick={() => setModalVisible(true)}
-            >
+            <CButton color="primary" onClick={() => setModalVisible(true)}>
               Group Students
             </CButton>
           </div>
         </div>
       </CCardHeader>
-      <CCardBody className="p-0 p-sm-3">
+      <CCardBody>
         <div className="table-responsive">
-          <CTable hover responsive small striped className="m-0">
+          <CTable hover responsive small striped>
             <CTableHead>
               <CTableRow>
-                <CTableHeaderCell scope="col" className="w-100 w-sm-33">
+                <CTableHeaderCell scope="col" style={{ width: '33%' }}>
                   Name
                 </CTableHeaderCell>
-                <CTableHeaderCell scope="col" className="w-100 w-sm-33 d-none d-sm-table-cell">
+                <CTableHeaderCell
+                  scope="col"
+                  style={{ width: '33%' }}
+                  className="d-none d-sm-table-cell"
+                >
                   Email
                 </CTableHeaderCell>
-                <CTableHeaderCell scope="col" className="w-100 w-sm-33">
+                <CTableHeaderCell scope="col" style={{ width: '33%' }}>
                   Group ID
                 </CTableHeaderCell>
               </CTableRow>
@@ -214,14 +214,14 @@ const MyStudents = () => {
               ) : (
                 students.map((student, index) => (
                   <CTableRow key={index}>
-                    <CTableDataCell className="text-break">
+                    <CTableDataCell>
                       {student.name}
                       <div className="d-sm-none text-muted small">{student.email}</div>
                     </CTableDataCell>
-                    <CTableDataCell className="text-break d-none d-sm-table-cell">
+                    <CTableDataCell className="d-none d-sm-table-cell">
                       {student.email}
                     </CTableDataCell>
-                    <CTableDataCell className="text-break">
+                    <CTableDataCell>
                       <div className="d-flex align-items-center">
                         {student.groupID && (
                           <span
@@ -232,11 +232,10 @@ const MyStudents = () => {
                               borderRadius: '50%',
                               display: 'inline-block',
                               marginRight: '8px',
-                              flexShrink: 0,
                             }}
                           ></span>
                         )}
-                        <span className="text-truncate">{student.groupID || 'Not grouped'}</span>
+                        {student.groupID || 'Not grouped'}
                       </div>
                     </CTableDataCell>
                   </CTableRow>
@@ -248,52 +247,48 @@ const MyStudents = () => {
       </CCardBody>
 
       {/* Group Students Modal */}
-      <CModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        className="modal-dialog-scrollable"
-      >
+      <CModal visible={modalVisible} onClose={() => setModalVisible(false)}>
         <CModalHeader>
           <CModalTitle>Group Students</CModalTitle>
         </CModalHeader>
-        <CModalBody className="p-0">
-          <div className="table-responsive">
-            <CTable small className="m-0">
-              <CTableHead>
-                <CTableRow>
-                  <CTableHeaderCell className="text-center" style={{ width: '60px' }}>
-                    Select
-                  </CTableHeaderCell>
-                  <CTableHeaderCell>Name</CTableHeaderCell>
-                  <CTableHeaderCell className="d-none d-sm-table-cell">Email</CTableHeaderCell>
-                </CTableRow>
-              </CTableHead>
-              <CTableBody>
-                {students
-                  .filter((student) => !student.groupID)
-                  .map((student) => (
-                    <CTableRow key={student.id}>
-                      <CTableDataCell className="text-center">
-                        <CFormCheck
-                          checked={selectedStudents.includes(student.id)}
-                          onChange={() => toggleStudentSelection(student.id)}
-                          disabled={
-                            selectedStudents.length === 3 && !selectedStudents.includes(student.id)
-                          }
-                        />
-                      </CTableDataCell>
-                      <CTableDataCell className="text-break">
-                        {student.name}
-                        <div className="d-sm-none text-muted small">{student.email}</div>
-                      </CTableDataCell>
-                      <CTableDataCell className="text-break d-none d-sm-table-cell">
-                        {student.email}
-                      </CTableDataCell>
-                    </CTableRow>
-                  ))}
-              </CTableBody>
-            </CTable>
-          </div>
+        <CModalBody>
+          <CTable small>
+            <CTableHead>
+              <CTableRow>
+                <CTableHeaderCell style={{ width: '20%' }} className="text-center">
+                  Select
+                </CTableHeaderCell>
+                <CTableHeaderCell style={{ width: '40%' }}>Name</CTableHeaderCell>
+                <CTableHeaderCell style={{ width: '40%' }} className="d-none d-sm-table-cell">
+                  Email
+                </CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+            <CTableBody>
+              {students
+                .filter((student) => !student.groupID)
+                .map((student) => (
+                  <CTableRow key={student.id}>
+                    <CTableDataCell className="text-center">
+                      <CFormCheck
+                        checked={selectedStudents.includes(student.id)}
+                        onChange={() => toggleStudentSelection(student.id)}
+                        disabled={
+                          selectedStudents.length === 3 && !selectedStudents.includes(student.id)
+                        }
+                      />
+                    </CTableDataCell>
+                    <CTableDataCell>
+                      {student.name}
+                      <div className="d-sm-none text-muted small">{student.email}</div>
+                    </CTableDataCell>
+                    <CTableDataCell className="d-none d-sm-table-cell">
+                      {student.email}
+                    </CTableDataCell>
+                  </CTableRow>
+                ))}
+            </CTableBody>
+          </CTable>
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={() => setModalVisible(false)}>
@@ -306,47 +301,43 @@ const MyStudents = () => {
       </CModal>
 
       {/* Enroll Students Modal */}
-      <CModal
-        visible={enrollModalVisible}
-        onClose={() => setEnrollModalVisible(false)}
-        className="modal-dialog-scrollable"
-      >
+      <CModal visible={enrollModalVisible} onClose={() => setEnrollModalVisible(false)}>
         <CModalHeader>
           <CModalTitle>Enroll Students</CModalTitle>
         </CModalHeader>
-        <CModalBody className="p-0">
-          <div className="table-responsive">
-            <CTable small className="m-0">
-              <CTableHead>
-                <CTableRow>
-                  <CTableHeaderCell className="text-center" style={{ width: '60px' }}>
-                    Select
-                  </CTableHeaderCell>
-                  <CTableHeaderCell>Name</CTableHeaderCell>
-                  <CTableHeaderCell className="d-none d-sm-table-cell">Email</CTableHeaderCell>
+        <CModalBody>
+          <CTable small>
+            <CTableHead>
+              <CTableRow>
+                <CTableHeaderCell style={{ width: '20%' }} className="text-center">
+                  Select
+                </CTableHeaderCell>
+                <CTableHeaderCell style={{ width: '40%' }}>Name</CTableHeaderCell>
+                <CTableHeaderCell style={{ width: '40%' }} className="d-none d-sm-table-cell">
+                  Email
+                </CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+            <CTableBody>
+              {availableStudents.map((student) => (
+                <CTableRow key={student.id}>
+                  <CTableDataCell className="text-center">
+                    <CFormCheck
+                      checked={selectedEnrollStudents.includes(student.id)}
+                      onChange={() => toggleEnrollStudentSelection(student.id)}
+                    />
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    {student.name}
+                    <div className="d-sm-none text-muted small">{student.email}</div>
+                  </CTableDataCell>
+                  <CTableDataCell className="d-none d-sm-table-cell">
+                    {student.email}
+                  </CTableDataCell>
                 </CTableRow>
-              </CTableHead>
-              <CTableBody>
-                {availableStudents.map((student) => (
-                  <CTableRow key={student.id}>
-                    <CTableDataCell className="text-center">
-                      <CFormCheck
-                        checked={selectedEnrollStudents.includes(student.id)}
-                        onChange={() => toggleEnrollStudentSelection(student.id)}
-                      />
-                    </CTableDataCell>
-                    <CTableDataCell className="text-break">
-                      {student.name}
-                      <div className="d-sm-none text-muted small">{student.email}</div>
-                    </CTableDataCell>
-                    <CTableDataCell className="text-break d-none d-sm-table-cell">
-                      {student.email}
-                    </CTableDataCell>
-                  </CTableRow>
-                ))}
-              </CTableBody>
-            </CTable>
-          </div>
+              ))}
+            </CTableBody>
+          </CTable>
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={() => setEnrollModalVisible(false)}>
