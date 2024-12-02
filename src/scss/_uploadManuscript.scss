@@ -1,0 +1,22 @@
+.dropzone {
+  border: 2px dashed #747474;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  background-color: var(--cui-body-bg);
+  border-radius: 8px;
+}
+
+.dropzone p {
+  color: #555;
+}
+
+.file-info {
+  margin-top: 10px;
+}
+
+.file-type-info {
+  color: #888;
+  font-size: 12px;
+  margin-top: 10px;
+}
