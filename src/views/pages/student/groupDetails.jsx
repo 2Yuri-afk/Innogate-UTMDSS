@@ -3,304 +3,358 @@ import {
   CCard,
   CCardBody,
   CCardHeader,
-  CButton,
-  CRow,
   CCol,
+  CRow,
   CContainer,
-  CButtonGroup,
+  CButton,
+  CImage,
   CModal,
   CModalHeader,
   CModalTitle,
   CModalBody,
   CModalFooter,
-  CListGroup,
-  CListGroupItem,
+  CAlert,
 } from '@coreui/react'
-import { cilCheckCircle, cilXCircle, cilCloudDownload } from '@coreui/icons'
-import CIcon from '@coreui/icons-react'
-import { collection, getDocs, query, where, updateDoc, doc } from 'firebase/firestore'
+import { collection, getDocs, query, where, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db, auth } from 'src/backend/firebase'
 import CustomToast from 'src/components/Toast/CustomToast'
 
-const GroupRequest = () => {
-  const [groupRequests, setGroupRequests] = useState([])
-  const [selectedGroup, setSelectedGroup] = useState(null)
-  const [confirmModal, setConfirmModal] = useState(false)
-  const [modalAction, setModalAction] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [toast, setToast] = useState(null)
+
+
+const GroupDetails = () => {
+  const [group, setGroup] = useState({
+    members: [],
+    thesisTitle: '',
+    thesisDescription: '',
+    client: '',
+    field: '',
+  })
+  const [adviserList, setAdviserList] = useState([])
+  const [selectedAdviser, setSelectedAdviser] = useState(null)
+  const [modalVisible, setModalVisible] = useState(false)
+  const [groupID, setGroupID] = useState(null)
+  const [adviserRejectionMessage, setAdviserRejectionMessage] = useState(null)
+  const [rejectedAdviserUIDs, setRejectedAdviserUIDs] = useState([])
+  const [requestStatus, setRequestStatus] = useState(null)
+  const [toast, setToast] = useState(null) // Added for toast notifications
 
   useEffect(() => {
-    const fetchAdviserRequests = async () => {
+    const fetchGroupDetails = async () => {
       try {
         const currentUser = auth.currentUser
-        if (!currentUser) {
-          console.log('No current user found')
-          return
+        if (!currentUser) return
+
+        const usersRef = collection(db, 'users')
+        const userQuery = query(usersRef, where('uid', '==', currentUser.uid))
+        const userSnapshot = await getDocs(userQuery)
+
+        if (!userSnapshot.empty) {
+          const userData = userSnapshot.docs[0].data()
+          const userGroupID = userData.groupID
+
+          if (userGroupID) {
+            setGroupID(userGroupID)
+
+            const membersQuery = query(usersRef, where('groupID', '==', userGroupID))
+            const membersSnapshot = await getDocs(membersQuery)
+
+            const members = membersSnapshot.docs
+              .map((doc) => ({
+                name: doc.data().name || 'Unknown Name',
+                email: doc.data().email || 'No Email',
+                role: doc.data().role || 'Unknown Role',
+              }))
+              .filter((member) => member.role === 'Student')
+
+            const proposalsRef = collection(db, 'proposals')
+            const proposalQuery = query(
+              proposalsRef,
+              where('groupID', '==', userGroupID),
+              where('status', '==', 'accepted'),
+            )
+            const proposalSnapshot = await getDocs(proposalQuery)
+
+            let proposalData = {}
+            if (!proposalSnapshot.empty) {
+              const proposal = proposalSnapshot.docs[0]
+              proposalData = proposal.data()
+            }
+
+            setGroup({
+              members,
+              thesisTitle: proposalData.title || '',
+              thesisDescription: proposalData.description || '',
+              client: proposalData.client || '',
+              field: proposalData.field || '',
+            })
+
+            // Fetch adviser request status
+            const requestsRef = collection(db, 'adviserRequests')
+            const requestQuery = query(requestsRef, where('groupID', '==', userGroupID))
+            const requestSnapshot = await getDocs(requestQuery)
+
+            if (!requestSnapshot.empty) {
+              const requestData = requestSnapshot.docs[0].data()
+              setSelectedAdviser({ uid: requestData.adviserUID, name: requestData.adviserName })
+              setRequestStatus(requestData.status)
+
+              if (requestData.status === 'rejected') {
+                setRejectedAdviserUIDs([requestData.adviserUID])
+                setAdviserRejectionMessage(
+                  'Your adviser request was rejected. Please choose another adviser.',
+                )
+              }
+            }
+          }
         }
-
-        const requestsRef = collection(db, 'adviserRequests')
-        const requestQuery = query(
-          requestsRef,
-          where('adviserUID', '==', currentUser.uid),
-          where('status', '==', 'pending'),
-        )
-        const requestSnapshot = await getDocs(requestQuery)
-
-        const requests = requestSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          timestamp: doc.data().timestamp?.toDate(),
-        }))
-
-        setGroupRequests(requests)
-        setLoading(false)
       } catch (error) {
-        console.error('Error fetching adviser requests:', error)
-        setLoading(false)
-      }
-    }
-
-    fetchAdviserRequests()
-  }, [])
-
-  const handleGroupSelect = (group) => {
-    setSelectedGroup(group)
-  }
-
-  const openConfirmModal = (action) => {
-    setModalAction(action)
-    setConfirmModal(true)
-  }
-
-  const handleGroupRequestResponse = async (accepted) => {
-    if (!selectedGroup) return
-
-    try {
-      const requestRef = doc(db, 'adviserRequests', selectedGroup.id)
-      await updateDoc(requestRef, {
-        status: accepted ? 'accepted' : 'rejected',
-        responseTimestamp: new Date(),
-      })
-
-      if (accepted) {
-        const proposalsRef = collection(db, 'proposals')
-        const proposalQuery = query(
-          proposalsRef,
-          where('groupID', '==', selectedGroup.groupID),
-          where('status', '==', 'accepted'),
-        )
-        const proposalSnapshot = await getDocs(proposalQuery)
-
-        if (!proposalSnapshot.empty) {
-          const proposalDoc = proposalSnapshot.docs[0]
-          await updateDoc(doc(db, 'proposals', proposalDoc.id), {
-            adviser: auth.currentUser.displayName,
-            adviserUID: auth.currentUser.uid,
-            lastUpdated: new Date(),
-          })
-        }
-      }
-
-      setGroupRequests((prev) => prev.filter((request) => request.id !== selectedGroup.id))
-      setToast({
-        color: 'success',
-        message: `Group request ${accepted ? 'accepted' : 'rejected'} successfully!`,
-      })
-      setSelectedGroup(null)
-      setConfirmModal(false)
-    } catch (error) {
-      console.error('Error handling adviser request:', error)
-      setToast({
-        color: 'danger',
-        message: 'Failed to process request. Please try again.',
-      })
-    }
-  }
-
-  const downloadAbstract = async () => {
-    if (!selectedGroup) return
-
-    try {
-      const proposalsRef = collection(db, 'proposals')
-      const proposalQuery = query(
-        proposalsRef,
-        where('groupID', '==', selectedGroup.groupID),
-        where('status', '==', 'accepted'),
-      )
-      const proposalSnapshot = await getDocs(proposalQuery)
-
-      if (!proposalSnapshot.empty) {
-        const proposalDoc = proposalSnapshot.docs[0]
-        const abstractFormUrl = proposalDoc.data().abstractForm
-
-        if (abstractFormUrl) {
-          const link = document.createElement('a')
-          link.href = abstractFormUrl
-          link.download = `${selectedGroup.groupID}_abstract.pdf` // Customize file name
-          link.click()
-        } else {
-          setToast({
-            color: 'warning',
-            message: 'No abstract file available for download.',
-          })
-        }
-      } else {
+        console.error('Error fetching group details:', error)
         setToast({
-          color: 'warning',
-          message: 'No proposal found for this group.',
+          color: 'danger',
+          message: 'Failed to fetch group details.',
         })
       }
-    } catch (error) {
-      console.error('Error downloading abstract form:', error)
+    }
+
+    fetchGroupDetails()
+  }, [])
+
+  useEffect(() => {
+    const fetchAdvisers = async () => {
+      try {
+        const usersRef = collection(db, 'users')
+        const adviserQuery = query(usersRef, where('role', '==', 'Adviser'))
+        const adviserSnapshot = await getDocs(adviserQuery)
+
+        const advisers = adviserSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          uid: doc.data().uid,
+          name: doc.data().name,
+        }))
+
+        setAdviserList(advisers)
+      } catch (error) {
+        console.error('Error fetching advisers:', error)
+        setToast({
+          color: 'danger',
+          message: 'Failed to fetch advisers.',
+        })
+      }
+    }
+
+    if (modalVisible) fetchAdvisers()
+  }, [modalVisible])
+
+  const handleSubmitRequest = async () => {
+    if (!selectedAdviser || !groupID) {
       setToast({
         color: 'danger',
-        message: 'Failed to download abstract. Please try again.',
+        message: 'You need to select an adviser or have a group before submitting.',
+      })
+      return
+    }
+
+    try {
+      await addDoc(collection(db, 'adviserRequests'), {
+        adviserUID: selectedAdviser.uid,
+        adviserName: selectedAdviser.name,
+        groupID,
+        status: 'pending',
+        timestamp: serverTimestamp(),
+        members: group.members,
+        approvedProposal: {
+          title: group.thesisTitle,
+          description: group.thesisDescription,
+          client: group.client,
+          field: group.field,
+        },
+      })
+
+      setRequestStatus('pending')
+      setModalVisible(false)
+      setToast({
+        color: 'success',
+        message: 'Adviser request submitted successfully!',
+      })
+    } catch (error) {
+      console.error('Error submitting adviser request:', error)
+      setToast({
+        color: 'danger',
+        message: 'Failed to submit adviser request.',
       })
     }
-  }
-
-  if (loading) {
-    return <div>Loading requests...</div>
   }
 
   return (
-    <CContainer fluid className="d-flex" style={{ fontSize: '0.875rem' }}>
-      <CCard style={{ width: '250px', marginRight: '15px' }}>
-        <CCardHeader className="py-2">
-          <h6 className="m-0">Pending Group Requests</h6>
-        </CCardHeader>
-        <CCardBody className="p-0">
-          <CListGroup>
-            {groupRequests.length > 0 ? (
-              groupRequests.map((request) => (
-                <CListGroupItem
-                  key={request.id}
-                  onClick={() => handleGroupSelect(request)}
-                  active={selectedGroup?.id === request.id}
-                  color={selectedGroup?.id === request.id ? 'primary' : undefined}
-                  className="py-2"
-                >
-                  <small>{request.groupID}</small>
-                </CListGroupItem>
-              ))
-            ) : (
-              <CListGroupItem className="py-2">
-                <small>No pending requests</small>
-              </CListGroupItem>
-            )}
-          </CListGroup>
-        </CCardBody>
-      </CCard>
+    <CContainer>
+      <CRow className="my-4">
+        <CCol md={4}>
+          <CCard>
+            <CCardHeader>
+              <strong>Members</strong>
+            </CCardHeader>
+            <CCardBody>
+              {group.members.length > 0 ? (
+                <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
+                  {group.members.map((member, index) => (
+                    <li key={index} className="d-flex align-items-center mb-3">
+                      <CImage
+                        src={member.photoURL || '/default-profile.png'} // Fallback to a default image if `photoURL` is missing
+                        width={40}
+                        height={40}
+                        className="me-3 rounded-circle"
+                      />
+                      <div>
+                        <strong>{member.name}</strong>
+                        <div className="text-muted" style={{ fontSize: '0.9em' }}>
+                          {member.email}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No members found in this group.</p>
+              )}
+            </CCardBody>
+          </CCard>
+        </CCol>
 
-      <CCard style={{ flex: 1 }}>
-        <CCardHeader className="py-2">
-          <h6 className="m-0">
-            {selectedGroup ? `Group Request: ${selectedGroup.groupID}` : 'Select a Group Request'}
-          </h6>
-        </CCardHeader>
-        <CCardBody>
-          {selectedGroup ? (
-            <div>
-              <CCard className="mb-3">
-                <CCardHeader className="py-2">
-                  <small className="m-0 fw-bold">Group Members</small>
-                </CCardHeader>
-                <CCardBody className="p-2">
-                  <CListGroup>
-                    {selectedGroup.members?.map((member) => (
-                      <CListGroupItem key={member.uid} className="py-1">
-                        <small>
-                          {member.name} - <em>{member.email}</em>
-                        </small>
-                      </CListGroupItem>
-                    ))}
-                  </CListGroup>
-                </CCardBody>
-              </CCard>
+        <CCol md={8}>
+          <CCard className="mb-3">
+            <CCardHeader>
+              <strong>Thesis Information</strong>
+            </CCardHeader>
+            <CCardBody>
+              <div>
+                <strong>Title:</strong> {group.thesisTitle || 'No title assigned'}
+              </div>
+              <div>
+                <strong>Description:</strong>{' '}
+                {group.thesisDescription || 'No description available'}
+              </div>
+            </CCardBody>
+          </CCard>
 
-              <CCard className="mb-3">
-                <CCardHeader className="py-2">
-                  <small className="m-0 fw-bold">Approved Topic</small>
-                </CCardHeader>
-                <CCardBody className="p-2">
-                  <h6 className="mb-2">{selectedGroup.approvedProposal?.title}</h6>
-                  <p className="mb-2" style={{ fontSize: '0.8rem' }}>
-                    {selectedGroup.approvedProposal?.description}
-                  </p>
-                  <CRow>
-                    <CCol>
-                      <small>
-                        <strong>Client:</strong> {selectedGroup.approvedProposal?.client}
-                      </small>
-                    </CCol>
-                    <CCol>
-                      <small>
-                        <strong>Field:</strong> {selectedGroup.approvedProposal?.field}
-                      </small>
-                    </CCol>
-                  </CRow>
-                  <CButton
-                    style={{ backgroundColor: '#3634a3', color: 'white' }}
-                    size="sm"
-                    className="mt-3"
-                    onClick={downloadAbstract}
-                  >
-                    <CIcon icon={cilCloudDownload} className="me-1" />
-                    Download Abstract
+          <CCard className="mb-3">
+            <CCardHeader>
+              <strong>Client Information</strong>
+            </CCardHeader>
+            <CCardBody>
+              <div>
+                <strong>Client:</strong> {group.client || 'No client assigned'}
+              </div>
+            </CCardBody>
+          </CCard>
+
+          <CCard className="mb-3">
+            <CCardHeader>
+              <strong>Field of Study</strong>
+            </CCardHeader>
+            <CCardBody>
+              <div>
+                <strong>Field:</strong> {group.field || 'No field assigned'}
+              </div>
+            </CCardBody>
+          </CCard>
+
+          <CCard>
+            <CCardHeader>
+              <strong>Adviser</strong>
+            </CCardHeader>
+            <CCardBody>
+              {adviserRejectionMessage && (
+                <>
+                  <CAlert color="warning">{adviserRejectionMessage}</CAlert>
+                  <CButton color="primary" onClick={() => setModalVisible(true)}>
+                    Pick an Adviser
                   </CButton>
-                </CCardBody>
-              </CCard>
-
-              <CButtonGroup className="w-100">
-                <CButton color="success" size="sm" onClick={() => openConfirmModal('accept')}>
-                  <CIcon icon={cilCheckCircle} className="me-1" />
-                  Accept
+                </>
+              )}
+              {selectedAdviser && requestStatus !== 'rejected' && (
+                <p>
+                  <strong>Name:</strong> {selectedAdviser.name}{' '}
+                  {requestStatus === 'pending' && (
+                    <span className="text-warning">(Pending for approval)</span>
+                  )}
+                </p>
+              )}
+              {!adviserRejectionMessage && !selectedAdviser && (
+                <CButton color="primary" onClick={() => setModalVisible(true)}>
+                  Pick an Adviser
                 </CButton>
-                <CButton color="danger" size="sm" onClick={() => openConfirmModal('reject')}>
-                  <CIcon icon={cilXCircle} className="me-1" />
-                  Reject
-                </CButton>
-              </CButtonGroup>
-            </div>
-          ) : (
-            <div className="text-center text-muted">
-              <p>Select a group request to view details</p>
-            </div>
-          )}
-        </CCardBody>
-      </CCard>
-
-      <CModal visible={confirmModal} onClose={() => setConfirmModal(false)} size="sm">
-        <CModalHeader>
-          <CModalTitle>
-            <small>
-              {modalAction === 'accept' ? 'Accept Group Request' : 'Reject Group Request'}
-            </small>
-          </CModalTitle>
-        </CModalHeader>
-        <CModalBody>
-          <small>
-            Are you sure you want to {modalAction} the group request for {selectedGroup?.groupID}?
-          </small>
-        </CModalBody>
-        <CModalFooter>
-          <CButton size="sm" color="secondary" onClick={() => setConfirmModal(false)}>
-            Cancel
-          </CButton>
-          <CButton
-            size="sm"
-            color={modalAction === 'accept' ? 'success' : 'danger'}
-            onClick={() => handleGroupRequestResponse(modalAction === 'accept')}
+              )}
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+      <CModal
+  visible={modalVisible}
+  onClose={() => {
+    setModalVisible(false); // Close the modal
+    setSelectedAdviser(null); // Clear the selected adviser
+  }}
+  onShow={() => {
+    setSelectedAdviser(null); // Reset the selected adviser when modal opens
+  }}
+>
+  <CModalHeader>
+    <CModalTitle>Select an Adviser</CModalTitle>
+  </CModalHeader>
+  <CModalBody>
+    {adviserList.length > 0 ? (
+      <ul className="list-unstyled">
+        {adviserList.map((adviser) => (
+          <li
+            key={adviser.id}
+            onClick={() => {
+              if (!rejectedAdviserUIDs.includes(adviser.uid)) {
+                setSelectedAdviser(adviser);
+                setAdviserRejectionMessage(null); // Clear rejection message
+              }
+            }}
+            className={`d-flex justify-content-between align-items-center p-3 mb-2 rounded ${
+              selectedAdviser && selectedAdviser.uid === adviser.uid
+                ? 'bg-success text-white'
+                : 'bg-body-secondary' // Automatically adapts to dark mode
+            } ${
+              rejectedAdviserUIDs.includes(adviser.uid) ? 'text-muted disabled' : 'cursor-pointer'
+            }`}
           >
-            {modalAction === 'accept' ? 'Accept' : 'Reject'}
-          </CButton>
-        </CModalFooter>
-      </CModal>
+            <span>{adviser.name}</span>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p className="text-center">No advisers available at the moment.</p>
+    )}
+  </CModalBody>
+  <CModalFooter>
+    <CButton
+      color="secondary"
+      onClick={() => {
+        setModalVisible(false); // Close the modal
+        setSelectedAdviser(null); // Clear the selected adviser
+      }}
+    >
+      Cancel
+    </CButton>
+    <CButton
+      color="primary"
+      onClick={() => {
+        handleSubmitRequest(); // Trigger the submission logic
+      }}
+      disabled={!selectedAdviser} // Prevent submission if no adviser is selected
+    >
+      Submit Request
+    </CButton>
+  </CModalFooter>
+</CModal>
 
-      <CustomToast toast={toast} setToast={setToast} />
+
+      <CustomToast toast={toast} setToast={setToast} /> {/* Toast added */}
     </CContainer>
   )
 }
 
-export default GroupRequest
+export default GroupDetails
