@@ -19,7 +19,7 @@ import { collection, getDocs, query, where, addDoc, serverTimestamp } from 'fire
 import { db, auth } from 'src/backend/firebase'
 import CustomToast from 'src/components/Toast/CustomToast'
 
-
+const defaultProfilePic = 'https://firebasestorage.googleapis.com/v0/b/thesismanagementsystem-39688.appspot.com/o/pic.png?alt=media&token=13aa8904-de84-401b-b813-4a753736304f';
 
 const GroupDetails = () => {
   const [group, setGroup] = useState({
@@ -199,7 +199,7 @@ const GroupDetails = () => {
                   {group.members.map((member, index) => (
                     <li key={index} className="d-flex align-items-center mb-3">
                       <CImage
-                        src={member.photoURL || '/default-profile.png'} // Fallback to a default image if `photoURL` is missing
+                        src={member.photoURL || defaultProfilePic} // Fallback to a default image if `photoURL` is missing
                         width={40}
                         height={40}
                         className="me-3 rounded-circle"

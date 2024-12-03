@@ -6,6 +6,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { db, auth, storage } from 'src/backend/firebase'
 import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore'
 import CustomToast from 'src/components/Toast/CustomToast'
+import upload from 'src/assets/images/upload.png'
 
 const UploadManuscript = () => {
   const [file, setFile] = useState(null)
@@ -358,7 +359,7 @@ const UploadManuscript = () => {
                 {isDragActive ? (
                   <p className="d-flex align-items-center justify-content-center flex-column">
                     <img
-                      src="src/assets/images/upload.png"
+                      src="upload"
                       alt="upload"
                       style={{ width: '80px', marginBottom: '10px' }}
                     />
