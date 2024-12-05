@@ -15,7 +15,15 @@ import {
   CModalFooter,
   CAlert,
 } from '@coreui/react'
-import { collection, getDocs, query, where, addDoc, serverTimestamp } from 'firebase/firestore'
+import { 
+  collection, 
+  getDocs, 
+  query, 
+  where, 
+  addDoc, 
+  serverTimestamp,
+  onSnapshot 
+} from 'firebase/firestore'
 import { db, auth } from 'src/backend/firebase'
 import CustomToast from 'src/components/Toast/CustomToast'
 
@@ -36,9 +44,11 @@ const GroupDetails = () => {
   const [adviserRejectionMessage, setAdviserRejectionMessage] = useState(null)
   const [rejectedAdviserUIDs, setRejectedAdviserUIDs] = useState([])
   const [requestStatus, setRequestStatus] = useState(null)
-  const [toast, setToast] = useState(null) // Added for toast notifications
+  const [toast, setToast] = useState(null)
 
   useEffect(() => {
+    let unsubscribes = []; // To store all unsubscribe functions
+
     const fetchGroupDetails = async () => {
       try {
         const currentUser = auth.currentUser
@@ -46,77 +56,97 @@ const GroupDetails = () => {
 
         const usersRef = collection(db, 'users')
         const userQuery = query(usersRef, where('uid', '==', currentUser.uid))
-        const userSnapshot = await getDocs(userQuery)
+        
+        // Real-time listener for user document
+        const userUnsubscribe = onSnapshot(userQuery, async (userSnapshot) => {
+          if (!userSnapshot.empty) {
+            const userData = userSnapshot.docs[0].data()
+            const userGroupID = userData.groupID
 
-        if (!userSnapshot.empty) {
-          const userData = userSnapshot.docs[0].data()
-          const userGroupID = userData.groupID
+            if (userGroupID) {
+              setGroupID(userGroupID)
 
-          if (userGroupID) {
-            setGroupID(userGroupID)
+              // Real-time listener for group members
+              const membersQuery = query(usersRef, where('groupID', '==', userGroupID))
+              const membersUnsubscribe = onSnapshot(membersQuery, (membersSnapshot) => {
+                const members = membersSnapshot.docs
+                  .map((doc) => ({
+                    name: doc.data().name || 'Unknown Name',
+                    email: doc.data().email || 'No Email',
+                    role: doc.data().role || 'Unknown Role',
+                    photoURL: doc.data().photoURL || defaultProfilePic,
+                  }))
+                  .filter((member) => member.role === 'Student')
 
-            const membersQuery = query(usersRef, where('groupID', '==', userGroupID))
-            const membersSnapshot = await getDocs(membersQuery)
+                setGroup(prevGroup => ({
+                  ...prevGroup,
+                  members,
+                }))
+              })
+              unsubscribes.push(membersUnsubscribe)
 
-            const members = membersSnapshot.docs
-              .map((doc) => ({
-                name: doc.data().name || 'Unknown Name',
-                email: doc.data().email || 'No Email',
-                role: doc.data().role || 'Unknown Role',
-              }))
-              .filter((member) => member.role === 'Student')
+              // Real-time listener for proposals
+              const proposalsRef = collection(db, 'proposals')
+              const proposalQuery = query(
+                proposalsRef,
+                where('groupID', '==', userGroupID),
+                where('status', '==', 'accepted')
+              )
+              const proposalUnsubscribe = onSnapshot(proposalQuery, (proposalSnapshot) => {
+                let proposalData = {}
+                if (!proposalSnapshot.empty) {
+                  const proposal = proposalSnapshot.docs[0]
+                  proposalData = proposal.data()
+                }
 
-            const proposalsRef = collection(db, 'proposals')
-            const proposalQuery = query(
-              proposalsRef,
-              where('groupID', '==', userGroupID),
-              where('status', '==', 'accepted'),
-            )
-            const proposalSnapshot = await getDocs(proposalQuery)
+                setGroup(prevGroup => ({
+                  ...prevGroup,
+                  thesisTitle: proposalData.title || '',
+                  thesisDescription: proposalData.description || '',
+                  client: proposalData.client || '',
+                  field: proposalData.field || '',
+                }))
+              })
+              unsubscribes.push(proposalUnsubscribe)
 
-            let proposalData = {}
-            if (!proposalSnapshot.empty) {
-              const proposal = proposalSnapshot.docs[0]
-              proposalData = proposal.data()
-            }
+              // Real-time listener for adviser requests
+              const requestsRef = collection(db, 'adviserRequests')
+              const requestQuery = query(requestsRef, where('groupID', '==', userGroupID))
+              const requestUnsubscribe = onSnapshot(requestQuery, (requestSnapshot) => {
+                if (!requestSnapshot.empty) {
+                  const requestData = requestSnapshot.docs[0].data()
+                  setSelectedAdviser({ uid: requestData.adviserUID, name: requestData.adviserName })
+                  setRequestStatus(requestData.status)
 
-            setGroup({
-              members,
-              thesisTitle: proposalData.title || '',
-              thesisDescription: proposalData.description || '',
-              client: proposalData.client || '',
-              field: proposalData.field || '',
-            })
-
-            // Fetch adviser request status
-            const requestsRef = collection(db, 'adviserRequests')
-            const requestQuery = query(requestsRef, where('groupID', '==', userGroupID))
-            const requestSnapshot = await getDocs(requestQuery)
-
-            if (!requestSnapshot.empty) {
-              const requestData = requestSnapshot.docs[0].data()
-              setSelectedAdviser({ uid: requestData.adviserUID, name: requestData.adviserName })
-              setRequestStatus(requestData.status)
-
-              if (requestData.status === 'rejected') {
-                setRejectedAdviserUIDs([requestData.adviserUID])
-                setAdviserRejectionMessage(
-                  'Your adviser request was rejected. Please choose another adviser.',
-                )
-              }
+                  if (requestData.status === 'rejected') {
+                    setRejectedAdviserUIDs([requestData.adviserUID])
+                    setAdviserRejectionMessage(
+                      'Your adviser request was rejected. Please choose another adviser.',
+                    )
+                  }
+                }
+              })
+              unsubscribes.push(requestUnsubscribe)
             }
           }
-        }
+        })
+        unsubscribes.push(userUnsubscribe)
+
       } catch (error) {
-        console.error('Error fetching group details:', error)
+        console.error('Error setting up real-time listeners:', error)
         setToast({
           color: 'danger',
-          message: 'Failed to fetch group details.',
+          message: 'Failed to set up real-time updates.',
         })
       }
     }
 
     fetchGroupDetails()
+
+    // Cleanup function to unsubscribe from all listeners
+    return () => {
+      unsubscribes.forEach(unsubscribe => unsubscribe())
+    }
   }, [])
 
   useEffect(() => {
