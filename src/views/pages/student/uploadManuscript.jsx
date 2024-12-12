@@ -18,8 +18,8 @@ const UploadManuscript = () => {
   const [currentUserData, setCurrentUserData] = useState(null)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [feedback, setFeedback] = useState(null)
-  const [notes, setNotes] = useState('') 
-  const [savedNotes, setSavedNotes] = useState('') 
+  const [notes, setNotes] = useState('')
+  const [savedNotes, setSavedNotes] = useState('')
   const previewRef = useRef(null)
 
   // Fetch current user's data and restore preview on component mount
@@ -35,7 +35,7 @@ const UploadManuscript = () => {
           })
           return
         }
-    
+
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid))
         if (!userDoc.exists()) {
           console.error('User document not found')
@@ -45,24 +45,24 @@ const UploadManuscript = () => {
           })
           return
         }
-    
+
         const userData = userDoc.data()
         console.log('User Data:', userData)
-    
+
         if (!userData.groupID) {
           console.error('User has no groupID')
           return
         }
-    
+
         setCurrentUserData(userData)
-    
+
         // Restore preview if file exists in userData
         if (userData.fileContainer && userData.fileContainer.file) {
           setUploaded(true)
           setPreview(userData.fileContainer.file)
           setSavedNotes(userData.notes || '')
         }
-    
+
         // Fetch feedback content from userData
         setFeedback(userData.feedback || null)
       } catch (error) {
@@ -89,7 +89,7 @@ const UploadManuscript = () => {
         setFile(selectedFile)
         const objectUrl = URL.createObjectURL(selectedFile)
         setPreview(objectUrl)
-        
+
         // Reset notes when a new file is selected
         setNotes('')
       } else {
@@ -115,7 +115,7 @@ const UploadManuscript = () => {
 
       const userDocRef = doc(db, 'users', currentUser.uid)
       await updateDoc(userDocRef, {
-        notes: notes
+        notes: notes,
       })
 
       setSavedNotes(notes)
@@ -174,7 +174,7 @@ const UploadManuscript = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-  
+
     if (!file) {
       setToast({
         color: 'warning',
@@ -182,7 +182,7 @@ const UploadManuscript = () => {
       })
       return
     }
-  
+
     if (!currentUserData?.groupID) {
       setToast({
         color: 'warning',
@@ -190,20 +190,20 @@ const UploadManuscript = () => {
       })
       return
     }
-  
+
     setLoading(true)
     try {
       console.log('Starting upload process...')
-  
+
       const storageRef = ref(
         storage,
         `manuscripts/${currentUserData.groupID}/${Date.now()}_${file.name}`,
       )
-  
+
       console.log('Storage reference created:', storageRef)
-  
+
       const uploadTask = uploadBytesResumable(storageRef, file)
-  
+
       uploadTask.on(
         'state_changed',
         (snapshot) => {
@@ -224,16 +224,16 @@ const UploadManuscript = () => {
             console.log('Upload completed, getting download URL...')
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
             console.log('Download URL obtained:', downloadURL)
-  
+
             // Reset the feedback field in the user's Firestore document
             await updateUserFeedback(currentUserData.uid)
-  
+
             // Reset feedback to null on the client-side
             setFeedback(null)
-  
+
             // Update all group members' file containers with the new file URL
             await updateGroupMembersFileContainers(downloadURL)
-  
+
             // Save notes if not empty
             if (notes.trim()) {
               await saveNotes()
@@ -246,7 +246,7 @@ const UploadManuscript = () => {
               })
               return
             }
-          
+
             // Rest of the existing validation and upload logic remains the same
             if (!file) {
               setToast({
@@ -255,7 +255,7 @@ const UploadManuscript = () => {
               })
               return
             }
-  
+
             setUploaded(true)
             setToast({
               color: 'success',
@@ -282,7 +282,7 @@ const UploadManuscript = () => {
       setLoading(false)
     }
   }
-  
+
   // Function to update the feedback field to null in the user's Firestore document
   const updateUserFeedback = async (userId) => {
     try {
@@ -358,21 +358,11 @@ const UploadManuscript = () => {
                 <input {...getInputProps()} />
                 {isDragActive ? (
                   <p className="d-flex align-items-center justify-content-center flex-column">
-                    <img
-                      src="upload"
-                      alt="upload"
-                      style={{ width: '80px', marginBottom: '10px' }}
-                    />
                     Drag and Drop here <br /> or <br />
                     <span style={{ color: 'blue', cursor: 'pointer' }}>Browse files</span>
                   </p>
                 ) : (
                   <p className="d-flex align-items-center justify-content-center flex-column">
-                    <img
-                      src="src/assets/images/upload.png"
-                      alt="upload"
-                      style={{ width: '80px', marginBottom: '10px' }}
-                    />
                     Drag and Drop here <br /> or <br />
                     <span style={{ color: 'blue', cursor: 'pointer' }}>Browse files</span>
                   </p>
@@ -417,11 +407,6 @@ const UploadManuscript = () => {
             </div>
           ) : (
             <div className="uploaded-section text-center">
-              <img
-                src="src/assets/images/uploaded.png"
-                alt="Uploaded document"
-                style={{ width: '80px', marginBottom: '10px' }}
-              />
               <p>File uploaded: {file?.name || currentUserData?.fileContainer?.fileName}</p>
               {renderPreview()}
               <div className="action-buttons">
